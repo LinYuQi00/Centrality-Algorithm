@@ -2,8 +2,8 @@
 # Author: LinYuqi
 # Email: lyqllfw@gmail.com
 # Date: 2024-10-29
-# Description: I-index to quantifying an urban location's irreplaceability paper: Wang X. et al. (2021). “I-index for quantifying an urban location's irreplaceability.”
-# \Computers, Environment and Urban Systems 90 (2021) 101711.
+# Description: I-index to quantifying an urban location's irreplaceability
+# paper: Wang X. et al. (2021). “I-index for quantifying an urban location's irreplaceability.” Computers, Environment and Urban Systems 90 (2021) 101711.
 # Note:
 
 import numpy as np
