@@ -87,7 +87,7 @@ def _inner_mx_degree_wangxi_2024(
 
         # 计算该节点的 MX 度：累加的 X 度 / 有效阈值数量
         if valid_t_count > 0:
-            mx_degree[i] = node_degree / valid_t_count
+            mx_degree[i] = node_degree.item() / valid_t_count
 
     return mx_degree
 
