@@ -10,28 +10,26 @@ import numpy as np
 from dataset import generate_flow_distance_matrices
 
 def _inner_calculate_nj(T_mat: np.ndarray)->np.ndarray:
-    """
-    计算每个目的地的总流量 Nj。
+    """Calculate the total flow Nj for each destination.
 
-    参数:
-    T (numpy.ndarray): OD 旅行矩阵 (m x n)。
+    Args:
+        T_mat (numpy.ndarray): The OD trip matrix (m x n).
 
-    返回:
-    numpy.ndarray: 每个目的地的总流量 Nj (长度 n)。
+    Returns:
+        numpy.ndarray: Total flow Nj for each destination (length n).
     """
     return np.sum(T_mat, axis=0)
 
 def _inner_create_fj(T_mat: np.ndarray, D_mat: np.ndarray, j: int) -> np.ndarray:
-    """
-    为指定目的地创建流距离向量 Fj。
+    """Create the flow distance vector Fj for a specified destination.
 
-    参数:
-    T_mat (numpy.ndarray): OD 旅行矩阵 (m x n)。
-    D_mat (numpy.ndarray): 距离矩阵 (m x n)。
-    j (int): 指定的目的地索引。
+    Args:
+        T_mat (numpy.ndarray): The OD trip matrix (m x n).
+        D_mat (numpy.ndarray): The distance matrix (m x n).
+        j (int): Index of the specified destination.
 
-    返回:
-    numpy.ndarray: 指定目的地的流距离向量 Fj。
+    Returns:
+        numpy.ndarray: The flow distance vector Fj for the specified destination.
     """
     m = T_mat.shape[0]
     fj = []
@@ -41,15 +39,14 @@ def _inner_create_fj(T_mat: np.ndarray, D_mat: np.ndarray, j: int) -> np.ndarray
     return np.array(fj)
 
 def _inner_calculate_mj(T_mat: np.ndarray, D_mat: np.ndarray) -> np.ndarray:
-    """
-    计算每个目的地流距离的中位数 Mj。
+    """Calculate the median flow distance Mj for each destination.
 
-    参数:
-    D_mat (numpy.ndarray): 距离矩阵 (m x n)。
-    T_mat (numpy.ndarray): OD 旅行矩阵 (m x n)。
+    Args:
+        T_mat (numpy.ndarray): The OD trip matrix (m x n).
+        D_mat (numpy.ndarray): The distance matrix (m x n).
 
-    返回:
-    numpy.ndarray: 每个目的地的流距离中位数 Mj (长度 n)。
+    Returns:
+        numpy.ndarray: Median flow distance Mj for each destination (length n).
     """
     n = D_mat.shape[1]
     mj_list = []
@@ -60,9 +57,15 @@ def _inner_calculate_mj(T_mat: np.ndarray, D_mat: np.ndarray) -> np.ndarray:
 
     return np.array(mj_list)
 
-def _inner_calculate_i_index(T_mat: np.ndarray, D_mat: np.ndarray) -> np.ndarray:
-    """
-    计算每个目的地的 I-index，内嵌 alpha 的计算。
+def _inner_i_index_wangxi_2024(T_mat: np.ndarray, D_mat: np.ndarray) -> np.ndarray:
+    """Calculate the I-index for each destination, with internal alpha calculation.
+
+    Args:
+        T_mat (numpy.ndarray): The OD trip matrix (m x n).
+        D_mat (numpy.ndarray): The distance matrix (m x n).
+
+    Returns:
+        numpy.ndarray: The I-index for each destination (length n).
     """
     Nj = _inner_calculate_nj(T_mat)  # 计算每个目的地的总流量
     Mj = _inner_calculate_mj(T_mat, D_mat)  # 计算每个目的地的流距离中位数
@@ -89,8 +92,17 @@ def _inner_calculate_i_index(T_mat: np.ndarray, D_mat: np.ndarray) -> np.ndarray
 
     return i_index
 
-def calculate_i_index(T_mat: np.ndarray, D_mat: np.ndarray)->np.ndarray:
-    return _inner_calculate_i_index(T_mat,D_mat)
+def i_index_wangxi_2024(T_mat: np.ndarray, D_mat: np.ndarray)->np.ndarray:
+    """Calculate the I-index using the OD trip matrix and distance matrix.
+
+    Args:
+        T_mat (numpy.ndarray): The OD trip matrix (m x n).
+        D_mat (numpy.ndarray): The distance matrix (m x n).
+
+    Returns:
+        numpy.ndarray: The I-index for each destination (length n).
+    """
+    return _inner_i_index_wangxi_2024(T_mat,D_mat)
 
 # 示例使用
 if __name__ == "__main__":
@@ -106,7 +118,7 @@ if __name__ == "__main__":
     num_destinations = 4
     T, D = generate_flow_distance_matrices(num_flows, num_destinations)
     print(D)
-    i_index = calculate_i_index(T,D)
+    i_index = i_index_wangxi_2024(T,D)
     print(i_index)
 
 
