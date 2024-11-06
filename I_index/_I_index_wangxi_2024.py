@@ -10,7 +10,8 @@ import numpy as np
 from dataset import generate_flow_distance_matrices
 
 def _inner_calculate_nj(T_mat: np.ndarray)->np.ndarray:
-    """Calculate the total flow Nj for each destination.
+    """
+    Calculate the total flow Nj for each destination.
 
     Args:
         T_mat (numpy.ndarray): The OD trip matrix (m x n).
@@ -21,7 +22,8 @@ def _inner_calculate_nj(T_mat: np.ndarray)->np.ndarray:
     return np.sum(T_mat, axis=0)
 
 def _inner_create_fj(T_mat: np.ndarray, D_mat: np.ndarray, j: int) -> np.ndarray:
-    """Create the flow distance vector Fj for a specified destination.
+    """
+    Create the flow distance vector Fj for a specified destination.
 
     Args:
         T_mat (numpy.ndarray): The OD trip matrix (m x n).
@@ -39,7 +41,8 @@ def _inner_create_fj(T_mat: np.ndarray, D_mat: np.ndarray, j: int) -> np.ndarray
     return np.array(fj)
 
 def _inner_calculate_mj(T_mat: np.ndarray, D_mat: np.ndarray) -> np.ndarray:
-    """Calculate the median flow distance Mj for each destination.
+    """
+    Calculate the median flow distance Mj for each destination.
 
     Args:
         T_mat (numpy.ndarray): The OD trip matrix (m x n).
@@ -57,8 +60,9 @@ def _inner_calculate_mj(T_mat: np.ndarray, D_mat: np.ndarray) -> np.ndarray:
 
     return np.array(mj_list)
 
-def _inner_i_index_wangxi_2024(T_mat: np.ndarray, D_mat: np.ndarray) -> np.ndarray:
-    """Calculate the I-index for each destination, with internal alpha calculation.
+def _inner_i_index_wangxi_2021(T_mat: np.ndarray, D_mat: np.ndarray) -> np.ndarray:
+    """
+    Calculate the I-index for each destination, with internal alpha calculation.
 
     Args:
         T_mat (numpy.ndarray): The OD trip matrix (m x n).
@@ -92,8 +96,9 @@ def _inner_i_index_wangxi_2024(T_mat: np.ndarray, D_mat: np.ndarray) -> np.ndarr
 
     return i_index
 
-def i_index_wangxi_2024(T_mat: np.ndarray, D_mat: np.ndarray)->np.ndarray:
-    """Calculate the I-index using the OD trip matrix and distance matrix.
+def flow_centrality_i_index_wangxi_2021(T_mat: np.ndarray, D_mat: np.ndarray)->np.ndarray:
+    """
+    Calculate the I-index using the OD trip matrix and distance matrix.
 
     Args:
         T_mat (numpy.ndarray): The OD trip matrix (m x n).
@@ -102,7 +107,7 @@ def i_index_wangxi_2024(T_mat: np.ndarray, D_mat: np.ndarray)->np.ndarray:
     Returns:
         numpy.ndarray: The I-index for each destination (length n).
     """
-    return _inner_i_index_wangxi_2024(T_mat,D_mat)
+    return _inner_i_index_wangxi_2021(T_mat,D_mat)
 
 # 示例使用
 if __name__ == "__main__":
@@ -118,7 +123,7 @@ if __name__ == "__main__":
     num_destinations = 4
     T, D = generate_flow_distance_matrices(num_flows, num_destinations)
     print(D)
-    i_index = i_index_wangxi_2024(T,D)
+    i_index = flow_centrality_i_index_wangxi_2021(T,D)
     print(i_index)
 
 
