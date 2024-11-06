@@ -10,14 +10,19 @@ import numpy as np
 from numpy.typing import ArrayLike
 from typing import Union, Optional
 
-def flow_attribute_angle(OD: ArrayLike) -> Union[np.ndarray, float]:
-    """calaulate flow angle.
+__all__ = [
+    "flow_centrality_x_index_wangxi_2023"
+]
+
+def _inner_flow_attribute_angle(OD: ArrayLike) -> Union[np.ndarray, float]:
+    """
+    Calculate the anti-clockwise angle of the OD flow with respect to the due east direction
 
     Args:
         OD (ArrayLike): OD matrix has 4 columns:  ox, oy, dx, dy.
 
     Returns:
-        Union[np.ndarray, float]: angle of flow. 0-2π.
+        Union[np.ndarray, float]: angle of flow. 0-360°
     """
     if np.ndim(OD) == 1:
         ox, oy, dx, dy = OD[0], OD[1], OD[2], OD[3]
@@ -35,13 +40,41 @@ def flow_attribute_angle(OD: ArrayLike) -> Union[np.ndarray, float]:
     angles_deg = (angles_deg + 360) % 360  # 将角度规范到 [0, 360)
     return angles_deg
 
-def calculate_h_index(bin_counts):
-    """根据给定的 bin_counts 计算 H 指数"""
+def _inner_calculate_h_index(bin_counts: np.array)-> int:
+    """
+    Calculate the H-index based on given bin counts.
+
+    The H-index quantifies the concentration of flow across bins. It is computed by sorting the bin
+    counts in descending order and finding the largest `k` such that there are at least `k` bins with
+    a count greater than or equal to `k`.
+
+    Args:
+        bin_counts (np.ndarray): A 1D array of flow counts for each angle bin.
+
+    Returns:
+        int: The calculated H-index.
+    """
     # 计算 H 指数
     sorted_bins = np.sort(bin_counts[bin_counts > 0])[::-1]
     return np.sum(sorted_bins >= np.arange(1,sorted_bins.size+1))
 
-def get_bin(angle, b, alpha):
+def _inner_get_bin(angle: float, b: int, alpha: float)-> int:
+    """
+    Calculate the bin index for a given angle, with an adjustment by alpha.
+
+    The function adjusts the angle by the offset `alpha`, normalizes it to the range [0, 360),
+    then determines the corresponding bin index based on the number of bins `b`. The angle is
+    divided into `b` bins, each of equal width, and the bin index is calculated by dividing the
+    adjusted angle by the bin width.
+
+    Args:
+        angle (float): The angle to be assigned to a bin, in degrees (0-360).
+        b (int): The number of bins to divide the angle range into.
+        alpha (float): The angle offset to adjust the input angle before binning.
+
+    Returns:
+        int: The index of the bin corresponding to the given angle.
+    """
     # 调整角度，将其偏移 alpha 后限制到 [0, 360) 范围
     adjusted_angle = (angle - alpha) % 360
     # 计算分箱宽度
@@ -50,17 +83,19 @@ def get_bin(angle, b, alpha):
     bin_index = int(adjusted_angle // bin_width)
     return bin_index
 
-def calculate_x_index(flow_matrix: np.ndarray, OD: Optional[np.ndarray] = None, angles_matrix: Optional[np.ndarray] = None) -> np.ndarray:
+def _inner_x_index_wangxi_2023(flow_matrix: np.ndarray, OD: Optional[np.ndarray] = None, angles_matrix: Optional[np.ndarray] = None) -> np.ndarray:
     """
-    使用位移向量间的角度计算所有地点的 X-index。
+    Compute the X-index for flow centrality using the flow matrix and optional OD trip matrix or angles matrix.
 
-    参数:
-    - flow_matrix: 2D NumPy array, OD流量矩阵，其中每个元素表示从一个地点流向另一个地点的流量
-    - od_matrix: Optional, 2D NumPy array, 每行表示一条流的 (ox, oy, dx, dy) 坐标
-    - angles_vector: Optional, 1D NumPy array, 角度值
+    Paper Reference: Wang X. et al.(2023). "X-index: A novel flow-based locational measure for quantifying centrality" International Journal of Applied Earth Observations and Geoinformation 117 (2023) 103187
 
-    返回:
-    - x_indexes: 1D NumPy array, 每个地点的 X-index
+    Args:
+        flow_matrix (np.ndarray): A 2D NumPy array representing the origin-destination (OD) flow matrix (m x n).
+        OD (Optional[np.ndarray], optional): A 2D NumPy array (m x 4) containing the coordinates of each flow (origin_x, origin_y, destination_x, destination_y).
+        angles_matrix (Optional[np.ndarray], optional): A 2D NumPy array (m x n) containing pre-calculated flow angles for each (origin, destination) pair.
+
+    Returns:
+        np.ndarray: A 1D NumPy array containing the X-index values for each destination node in the flow network.Higher values indicate more central locations in the network based on flow dynamics.
     """
     # 计算每个地点的流入流量
     inflow_volumes = np.sum(flow_matrix, axis=0)
@@ -75,7 +110,7 @@ def calculate_x_index(flow_matrix: np.ndarray, OD: Optional[np.ndarray] = None, 
 
     # 如果没有提供角度向量，且提供了 OD 矩阵，则计算角度
     if OD is not None and angles_matrix is None:
-        angles_vector = flow_attribute_angle(OD)
+        angles_vector = _inner_flow_attribute_angle(OD)
         # 创建一个 n*m 的矩阵，n 是流量矩阵的列数，m 是流量矩阵的行数
         m, n = flow_matrix.shape[0], flow_matrix.shape[1]
         angles_matrix = np.zeros((m, n))
@@ -120,11 +155,11 @@ def calculate_x_index(flow_matrix: np.ndarray, OD: Optional[np.ndarray] = None, 
                 #     if 0 <= bin_index < b:  # 确保 bin_index 在有效范围内
                 #         bin_counts[bin_index] += 1
                 for k, angle in enumerate(angles):
-                    bin_index = get_bin(angle, b, alpha)
+                    bin_index = _inner_get_bin(angle, b, alpha)
                     if 0 <= bin_index < b:
                         bin_counts[bin_index] += flow_matrix[k][j]  # 将流量累加到分箱
                 # 计算 H(A_b, α)
-                h_value = calculate_h_index(bin_counts)
+                h_value = _inner_calculate_h_index(bin_counts)
                 print(b, "分法,alpha_max是",alpha_max,"此时的alpha是：",alpha,"此时的百分数为:", percentile, "得到的bin分箱是：", bin_counts,",此时的h-index是：",h_value)
                 max_h_value = max(max_h_value, h_value)  # 更新最大 H 值
 
@@ -132,6 +167,27 @@ def calculate_x_index(flow_matrix: np.ndarray, OD: Optional[np.ndarray] = None, 
         x_indexes[j] = max_h_value
 
     return x_indexes
+
+def flow_centrality_x_index_wangxi_2023(flow_matrix: np.ndarray, OD: Optional[np.ndarray] = None, angles_matrix: Optional[np.ndarray] = None) -> np.ndarray:
+    """
+    Compute the X-index for flow centrality using the flow matrix and optional OD trip matrix or angles matrix.
+
+    This function calculates the X-index for each destination in a flow network, which measures the
+    centrality of a location based on the distribution of incoming flows. The X-index incorporates both
+    the volume and directionality of flows toward a destination, quantifying its centrality relative to
+    other nodes in the network.
+
+    Paper Reference: Wang X. et al.(2023). "X-index: A novel flow-based locational measure for quantifying centrality" International Journal of Applied Earth Observations and Geoinformation 117 (2023) 103187
+
+    Args:
+        flow_matrix (np.ndarray): A 2D NumPy array representing the origin-destination (OD) flow matrix (m x n).
+        OD (Optional[np.ndarray], optional): A 2D NumPy array (m x 4) containing the coordinates of each flow (origin_x, origin_y, destination_x, destination_y).
+        angles_matrix (Optional[np.ndarray], optional): A 2D NumPy array (m x n) containing pre-calculated flow angles for each (origin, destination) pair.
+
+    Returns:
+        np.ndarray: A 1D NumPy array containing the X-index values for each destination node in the flow network.Higher values indicate more central locations in the network based on flow dynamics.
+    """
+    return _inner_x_index_wangxi_2023(flow_matrix,OD,angles_matrix)
 
 if __name__ == '__main__':
     flow_matrix = np.array([[1,2],
@@ -164,5 +220,5 @@ if __name__ == '__main__':
                    [1, -2, 1, 0]
                    ])
 
-    x_index = calculate_x_index(flow_matrix,OD, angles_matrix= None)
+    x_index = flow_centrality_x_index_wangxi_2023(flow_matrix, OD, angles_matrix= None)
     print(x_index)
