@@ -5,18 +5,30 @@
 # Description: Network Based ways for quantifying an urban city's centrality
 # Papers:
 # Notes:
-
+from typing import Literal
 import numpy as np
-# from typing import Literal
+
 __all__ =[
     'out_degree',
     'in_degree',
     'degree_centrality',
+    'weighted_degree_centrality',
     'flow_entropy',
     'recursive_centrality',
     'recursive_power',
     'eigenvector_centrality'
 ]
+
+def _inner_make_symmetric(matrix: np.ndarray) -> np.ndarray:
+    # 创建矩阵的副本
+    symmetric_matrix = matrix.copy()
+
+    # 将下三角部分复制到上三角
+    # np.tril(matrix) 获取下三角矩阵，np.tril(matrix,-1).T 获取下三角部分的转置（上三角部分,不包含主对角线）
+    symmetric_matrix = np.tril(symmetric_matrix) + np.tril(symmetric_matrix, -1).T
+
+    return symmetric_matrix
+
 def _inner_out_degree(flow_matrix: np.ndarray) -> np.ndarray:
 
     out_degree = np.sum(flow_matrix > 0, axis=1)
@@ -62,7 +74,18 @@ def _inner_degree_centrality(flow_matrix:np.ndarray) -> np.ndarray:
 def degree_centrality(flow_matrix:np.ndarray) -> np.ndarray:
     return _inner_degree_centrality(flow_matrix)
 
-def _inner_flow_entropy(flows: np.ndarray, mode: str) -> np.ndarray:
+def _inner_weighted_degree_centrality(flow_matrix: np.ndarray, mode:Literal['divergence','convergence']) -> np.ndarray:
+    # 计算每个节点的加权度中心性
+    if mode == 'divergence':
+        centrality = np.sum(flow_matrix, axis=1)  # 沿着每一行求和
+    elif mode == 'convergence':
+        centrality = np.sum(flow_matrix, axis=0)
+    return centrality
+
+def weighted_degree_centrality(flow_matrix: np.ndarray, mode:Literal['divergence','convergence']) -> np.ndarray:
+    return _inner_weighted_degree_centrality(flow_matrix,mode)
+
+def _inner_flow_entropy(flows: np.ndarray, mode:Literal['divergence','convergence']) -> np.ndarray:
 
     n = flows.shape[0]
     entropies = np.zeros(n)
@@ -102,6 +125,7 @@ def flow_entropy(flows: np.ndarray, mode: str) -> np.ndarray:
 def _inner_recursive_centrality(R: np.ndarray) -> np.ndarray:
     # 联系矩阵R是对称矩阵，可以以此算出度中心性
     DC = _inner_degree_centrality(R)
+    R = _inner_make_symmetric(R)
     RC = np.dot(R, DC)
     return RC
 
@@ -110,9 +134,9 @@ def recursive_centrality(R: np.ndarray) -> np.ndarray:
 
 def _inner_recursive_power(R: np.ndarray) -> np.ndarray:
 
-    # Inverse degree centrality
     DC = _inner_degree_centrality(R)
     inverse_DC = 1 / DC
+    R = _inner_make_symmetric(R)
     RP = np.dot(R, inverse_DC)
     return RP
 
@@ -120,17 +144,7 @@ def recursive_power(R: np.ndarray) -> np.ndarray:
     return _inner_recursive_power(R)
 
 def _inner_eigenvector_centrality(flow_matrix: np.ndarray, max_iter, tol):
-    """
-    计算给定流量矩阵的特征向量中心性。
 
-    参数:
-    - flow_matrix: np.ndarray，对称的流量矩阵
-    - max_iter: int，最大迭代次数
-    - tol: float，收敛容忍度
-
-    返回:
-    - centrality: np.ndarray，特征向量中心性值
-    """
     # 确保输入矩阵是 NumPy 数组
     if not isinstance(flow_matrix, np.ndarray):
         raise ValueError("输入矩阵应为 NumPy 数组")
