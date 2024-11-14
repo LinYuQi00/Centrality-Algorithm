@@ -143,7 +143,7 @@ def _inner_recursive_power(R: np.ndarray) -> np.ndarray:
 def recursive_power(R: np.ndarray) -> np.ndarray:
     return _inner_recursive_power(R)
 
-def _inner_eigenvector_centrality(flow_matrix: np.ndarray, max_iter, tol):
+def _inner_eigenvector_centrality(flow_matrix: np.ndarray, tol)-> np.ndarray:
 
     # 确保输入矩阵是 NumPy 数组
     if not isinstance(flow_matrix, np.ndarray):
@@ -154,26 +154,26 @@ def _inner_eigenvector_centrality(flow_matrix: np.ndarray, max_iter, tol):
     centrality = np.ones(n)
 
     # 归一化初始中心性向量
-    centrality = centrality / np.linalg.norm(centrality, ord=2)
+    centrality = centrality / np.linalg.norm(centrality, 1)
 
     # 开始迭代计算
-    for _ in range(max_iter):
+    while True:
         # 计算新的中心性向量
         centrality_new = np.dot(flow_matrix, centrality)
 
         # 归一化
-        centrality_new = centrality_new / np.linalg.norm(centrality_new, ord=2)
+        centrality_new = centrality_new / np.linalg.norm(centrality_new, 1)
 
         # 判断收敛条件
-        if np.linalg.norm(centrality_new - centrality, ord=2) < tol:
+        if np.linalg.norm(centrality_new - centrality, 2) < tol:
             break
 
         centrality = centrality_new
 
     return centrality
 
-def eigenvector_centrality(flow_matrix: np.ndarray):
-    return _inner_eigenvector_centrality(flow_matrix,100,1e-6)
+def eigenvector_centrality(flow_matrix: np.ndarray)->np.ndarray:
+    return _inner_eigenvector_centrality(flow_matrix,1e-6)
 
 if __name__ == '__main__':
 
