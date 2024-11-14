@@ -115,7 +115,7 @@ def _inner_flow_entropy(flows: np.ndarray, mode:Literal['divergence','convergenc
             entropies[j] = -np.sum(probabilities * np.log(probabilities))
 
     else:
-        raise ValueError("mode 参数必须为 'divergence' 或 'convergence'")
+        raise ValueError("mode must be 'divergence' or 'convergence'")
 
     return entropies
 
