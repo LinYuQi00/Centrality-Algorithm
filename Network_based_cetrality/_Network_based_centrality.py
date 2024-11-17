@@ -6,6 +6,7 @@
 # Papers:
 # Notes:
 from typing import Literal
+import networkx as nx
 import numpy as np
 
 __all__ =[
@@ -16,7 +17,9 @@ __all__ =[
     'flow_entropy',
     'recursive_centrality',
     'recursive_power',
-    'eigenvector_centrality'
+    'eigenvector_centrality',
+    'closeness_centrality',
+    'betweenness_centrality'
 ]
 
 def _inner_make_symmetric(matrix: np.ndarray) -> np.ndarray:
@@ -143,37 +146,39 @@ def _inner_recursive_power(R: np.ndarray) -> np.ndarray:
 def recursive_power(R: np.ndarray) -> np.ndarray:
     return _inner_recursive_power(R)
 
-def _inner_eigenvector_centrality(flow_matrix: np.ndarray, tol)-> np.ndarray:
+def _inner_eigenvector_centrality(flow_matrix: np.ndarray) -> np.ndarray:
+    adj_matrix = (flow_matrix > 0).astype(int)
+    G = nx.from_numpy_array(adj_matrix)  # 创建无向图
+    eigenvector_centrality = np.array(list(nx.eigenvector_centrality(G, max_iter=1000).values()))
+    return eigenvector_centrality
 
-    # 确保输入矩阵是 NumPy 数组
-    if not isinstance(flow_matrix, np.ndarray):
-        raise ValueError("输入矩阵应为 NumPy 数组")
+def eigenvector_centrality(flow_matrix: np.ndarray) -> np.ndarray:
+    return _inner_eigenvector_centrality(flow_matrix)
 
-    # 初始化中心性向量，所有节点初始值为 1
-    n = flow_matrix.shape[0]
-    centrality = np.ones(n)
+def _inner_closeness_centrality(flow_matrix: np.ndarray) -> np.ndarray:
+    adj_matrix = (flow_matrix > 0).astype(int)  # 转换为二值化邻接矩阵
+    G = nx.from_numpy_array(adj_matrix)  # 创建无向图
 
-    # 归一化初始中心性向量
-    centrality = centrality / np.linalg.norm(centrality, 1)
+    # 使用NetworkX的内置函数计算接近度中心性
+    closeness_centrality = np.array(list(nx.closeness_centrality(G).values()))
 
-    # 开始迭代计算
-    while True:
-        # 计算新的中心性向量
-        centrality_new = np.dot(flow_matrix, centrality)
+    return closeness_centrality
 
-        # 归一化
-        centrality_new = centrality_new / np.linalg.norm(centrality_new, 1)
+def closeness_centrality(flow_matrix: np.ndarray)-> np.ndarray:
+    return _inner_closeness_centrality(flow_matrix)
 
-        # 判断收敛条件
-        if np.linalg.norm(centrality_new - centrality, 2) < tol:
-            break
+def _inner_betweenness_centrality(flow_matrix: np.ndarray)->np.ndarray:
+    adj_matrix = (flow_matrix > 0).astype(int)
+    G = nx.from_numpy_array(adj_matrix)  # 创建无向图
 
-        centrality = centrality_new
+    # 使用NetworkX计算中介度中心性
+    betweenness_centrality_dict = nx.betweenness_centrality(G, normalized=True)
+    betweenness_centrality = np.array(list(betweenness_centrality_dict.values()))
 
-    return centrality
+    return betweenness_centrality
 
-def eigenvector_centrality(flow_matrix: np.ndarray)->np.ndarray:
-    return _inner_eigenvector_centrality(flow_matrix,1e-6)
+def betweenness_centrality(flow_matrix:np.ndarray)->np.ndarray:
+    return _inner_betweenness_centrality(flow_matrix)
 
 if __name__ == '__main__':
 
