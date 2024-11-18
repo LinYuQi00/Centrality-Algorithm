@@ -127,7 +127,10 @@ def flow_entropy(flows: np.ndarray, mode: str) -> np.ndarray:
 
 def _inner_recursive_centrality(R: np.ndarray) -> np.ndarray:
     # 联系矩阵R是对称矩阵，可以以此算出度中心性
-    DC = _inner_degree_centrality(R)
+    G = nx.from_numpy_array(R)
+    DC = np.array(list(nx.degree_centrality(G).values()))
+    print("nx degree is:", DC)
+    # DC = _inner_degree_centrality(R)
     R = _inner_make_symmetric(R)
     RC = np.dot(R, DC)
     return RC
@@ -206,7 +209,7 @@ if __name__ == '__main__':
     out_degree_centrality = _inner_out_degree(flow_matrix)
     in_degree_centrality = in_degree(flow_matrix)
     degree_centrality = degree_centrality(flow_matrix)
-    recursive_centrality = recursive_centrality(flow_matrix)
+    recursive_centrality = _inner_recursive_centrality(flow_matrix)
 
     # 输出结果
     print("Out-degree Centrality:", out_degree_centrality)
