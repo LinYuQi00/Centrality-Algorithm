@@ -15,8 +15,8 @@ __all__ =[
     'degree_centrality',
     'weighted_degree_centrality',
     'flow_entropy',
-    'recursive_centrality',
     'recursive_power',
+    'recursive_centrality',
     'eigenvector_centrality',
     'closeness_centrality',
     'betweenness_centrality'
@@ -158,7 +158,6 @@ def eigenvector_centrality(flow_matrix: np.ndarray) -> np.ndarray:
 def _inner_closeness_centrality(flow_matrix: np.ndarray) -> np.ndarray:
     adj_matrix = (flow_matrix > 0).astype(int)  # 转换为二值化邻接矩阵
     G = nx.from_numpy_array(adj_matrix)  # 创建无向图
-
     # 使用NetworkX的内置函数计算接近度中心性
     closeness_centrality = np.array(list(nx.closeness_centrality(G).values()))
 
